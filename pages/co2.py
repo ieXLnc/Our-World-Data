@@ -1,37 +1,50 @@
-from dash import Dash, dcc, html, Input, Output, register_page, callback
-import plotly.graph_objs as go
+import os
+from dash import (
+    Dash,
+    dcc,
+    html,
+    Input,
+    Output,
+    register_page,
+    callback,
+    clientside_callback,
+)
 import plotly.express as px
 import pandas as pd
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 import numpy as np
 
-
+static = "static/"
 load_figure_template("MINTY")
-df = pd.read_csv(
-    "C:/Users/xavier/PycharmProjects/Dashboard/climate/annual-co2-emissions-per-country.csv"
-)
-
+df = pd.read_csv(os.path.join(static, "annual-co2-emissions-per-country.csv"))
 
 # df functions
 def prepare_map(df, year):
     df_yr = df.loc[df["Year"] == year].copy()
+    df_yr = df_yr.drop(df_yr.loc[df_yr["Entity"] == "Antarctica"].index)
     df_yr = df_yr.fillna("No data")
     return df_yr
 
 
-def prepare_scatter(df, year):
-    list_pays = [
-        "United States",
-        "United Kingdom",
-        "European Union (28)",
-        "India",
-        "China",
-        "South Africa",
-        "Russia",
-        "Brazil",
-    ]
-    df_p = df[df["Entity"].isin(list_pays)]
+def prepare_scatter(df, year, selectedData):
+    # record the last one to remove selection if double click
+    if selectedData is None:
+        mask = [
+            "United States",
+            "United Kingdom",
+            "European Union (28)",
+            "India",
+            "China",
+            "South Africa",
+            "Russia",
+            "Brazil",
+        ]
+        df_p = df[df["Entity"].isin(mask)]
+    else:
+        mask = selectedData["points"][0]["hovertext"]
+        df_p = df[df["Entity"] == mask]
+
     df_p_yr = df_p.loc[df["Year"] <= year]
     df_p_yr = df_p_yr.fillna("No data")
 
@@ -48,19 +61,22 @@ text_slider = html.Div(
                     html.Div(
                         [
                             html.H4("Annual CO2 emissions by country"),
+                            html.P(
+                                """Carbon dioxide (CO₂) emissions from fossil fuels and industry. Land use change is not included."""
+                            ),
                         ],
-                        style={"textAlign": "center", "height": "45vh"},
+                        style={"height": "45vh"},  # "textAlign": "center",
                     ),
                     html.Div(
                         [
                             dcc.Slider(
                                 id="my-slider-1",
-                                value=1800,
-                                min=1800,
-                                max=2020,
+                                value=df["Year"].max(),
+                                min=df["Year"].min(),
+                                max=df["Year"].max(),
                                 marks=None,
                                 tooltip={"placement": "bottom", "always_visible": True},
-                            )
+                            ),
                         ]
                     ),
                 ]
@@ -163,12 +179,14 @@ def update_map(value):
             landcolor="LightGrey",
             # projection_type='equirectangular'
             projection_type="natural earth",
+            fitbounds="locations",
+            visible=False,
         ),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         geo_bgcolor="rgba(0,0,0,0)",
         autosize=True,  # width=1300, height=500,
-        clickmode="select",
+        clickmode="event+select",
     )
     fig.update_coloraxes(
         colorbar=dict(
@@ -207,15 +225,27 @@ def update_map(value):
     return fig
 
 
-@callback(Output("my-graph-1", "figure"), [Input("my-slider-1", "value")])
-def update_graph(value):
-    dff_2 = prepare_scatter(df, value)
+@callback(
+    Output("my-graph-1", "figure"),
+    [Input("my-slider-1", "value"), Input("my-graph-2", "selectedData")],
+)
+def update_graph(value, selectedData):
+    dff_2 = prepare_scatter(df, value, selectedData)
     fig = px.line(
         dff_2,
         x="Year",
         y="Annual CO2 emissions",
         color="Entity",
+        color_discrete_sequence=px.colors.sequential.Aggrnyl,
     ).update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-    fig.update_xaxes(showgrid=False)
-    fig.update_yaxes(showgrid=False)
+    fig.update_xaxes(
+        showgrid=True,
+        # color='LightGrey',
+        gridcolor="LightGrey",
+    )
+    fig.update_yaxes(
+        showgrid=True,
+        # color='LightGrey',
+        gridcolor="LightGrey",
+    )
     return fig

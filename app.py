@@ -1,10 +1,9 @@
 from dash import Dash, dcc, html, Input, Output
 import dash
-import plotly.graph_objs as go
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 
-
+static = "static/"
 load_figure_template("MINTY")
 
 # -------------------Build Layout--------------------------
@@ -20,6 +19,7 @@ navbar = dbc.NavbarSimple(
                 dbc.DropdownMenuItem("C02 emissions", href="/co2"),
                 dbc.DropdownMenuItem("Gender Equality", href="/gender"),
                 dbc.DropdownMenuItem("Democracy", href="/democracy"),
+                dbc.DropdownMenuItem("Your country", href="/your-country"),
             ],
         ),
     ],

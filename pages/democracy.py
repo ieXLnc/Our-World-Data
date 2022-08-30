@@ -1,23 +1,19 @@
 from dash import Dash, dcc, html, Input, Output, register_page, callback
-import dash
-import plotly.graph_objs as go
+import os
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import pandas as pd
+import numpy as np
 
-df_electoral = pd.read_csv(
-    "C:/Users/xavier/PycharmProjects/Dashboard/democracy/democracy.csv"
-)
-df_civil = pd.read_csv(
-    "C:/Users/xavier/PycharmProjects/Dashboard/democracy/civil-liberties-eiu.csv"
-)
-df_democracy = pd.read_csv(
-    "C:/Users/xavier/PycharmProjects/Dashboard/democracy/people-living-in-democracies-womsuffr-bmr.csv"
-)
+static = "static/"
+df_electoral = pd.read_csv(os.path.join(static, "democracy.csv"))
+df_civil = pd.read_csv(os.path.join(static, "civil-liberties-eiu.csv"))
+df_democracy = pd.read_csv(os.path.join(static, "democracies_autocracies.csv"))
 
 
 def prepare_map(df, year):
     df_yr = df.loc[df["Year"] == year]
+    df_yr = df_yr.drop(df_yr.loc[df_yr["Entity"] == "Antarctica"].index)
     df_yr = df_yr.fillna("No data")
     return df_yr
 
@@ -28,18 +24,84 @@ def prepare_line(df, country):
 
 
 def prepare_scatter(df, year):
-    df_yr = df.loc[df["Year"] <= year]
+    df_w = df.loc[df["Entity"] == "World"]
+    df_yr = df_w.loc[df_w["Year"] <= year]
     df_yr = df_yr.fillna("No data")
 
     return df_yr
 
 
 # -------------------Build layout--------------------------
-text_exp = html.Div(
-    [dbc.Card(dbc.CardBody([html.P("Cool exp here", style={"TextAlign": "center"})]))]
+text_exp_1 = html.Div(
+    [
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H4(
+                        "People living in democracies and autocracies in the world"
+                    ),
+                    html.P(
+                        """Political regimes based on the criteria of the classification by Lührmann et al. (2018) and the assessment by V-Dem’s
+                            experts.""",
+                        style={"TextAlign": "center", "height": "35vh"},
+                    ),
+                ]
+            ),
+            style={"height": "40vh"},
+        )
+    ]
 )
 
-id_country = html.Div(
+text_exp_2 = html.Div(
+    [
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H4(
+                        "Electoral democracy",
+                    ),  # style={'font-size':"90%"}
+                    html.P(
+                        """Based on the expert assessments and index by V-Dem. It captures to which extent political leaders are elected under
+                            comprehensive voting rights in free and fair elections, and freedoms of association and expression are guaranteed. It
+                            ranges from 0 to 1 (most democratic).""",
+                        style={
+                            "TextAlign": "center",
+                            "height": "35vh",
+                            "font-size": "13px",
+                        },
+                    ),
+                ]
+            ),
+            style={"height": "40vh"},
+        )
+    ]
+)
+
+text_exp_3 = html.Div(
+    [
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H4(
+                        "Civil liberties",
+                    ),  # style={'font-size':"90%"}
+                    html.P(
+                        """Based on the expert assessments and index by the Economist Intelligence Unit (2022). It ranges from 0 to 10 (most
+                    liberties).""",
+                        style={
+                            "TextAlign": "center",
+                            "height": "35vh",
+                            "font-size": "13px",
+                        },
+                    ),
+                ]
+            ),
+            style={"height": "40vh"},
+        )
+    ]
+)
+
+id_country_dem = html.Div(
     [
         dbc.Card(
             dbc.CardBody(
@@ -47,14 +109,38 @@ id_country = html.Div(
                     html.Div(id="text-country", style={"TextAlign": "center"}),
                     #
                     dcc.Graph(
-                        id="line-country",
+                        id="line-country-dem",
+                        style={"height": "35vh"},
                         config={
                             "displaylogo": False,
                             "displayModeBar": False,
                         },
                     ),
                 ]
-            )
+            ),
+            style={"height": "40vh"},
+        )
+    ]
+)
+
+id_country_civ = html.Div(
+    [
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    html.Div(id="text-country", style={"TextAlign": "center"}),
+                    #
+                    dcc.Graph(
+                        id="line-country-civ",
+                        style={"height": "35vh"},
+                        config={
+                            "displaylogo": False,
+                            "displayModeBar": False,
+                        },
+                    ),
+                ]
+            ),
+            style={"height": "40vh"},
         )
     ]
 )
@@ -66,9 +152,9 @@ map_elect = html.Div(
                 [
                     dcc.Slider(
                         id="my-slider-5",
-                        value=1800,
-                        min=1800,
-                        max=df_civil["Year"].max(),
+                        value=df_electoral["Year"].max(),
+                        min=df_electoral["Year"].min(),
+                        max=df_electoral["Year"].max(),
                         marks=None,
                         updatemode="drag",
                         tooltip={"placement": "bottom", "always_visible": True},
@@ -97,7 +183,7 @@ map_civil_lib = html.Div(
                 [
                     dcc.Slider(
                         id="my-slider-6",
-                        value=df_civil["Year"].min(),
+                        value=df_civil["Year"].max(),
                         min=df_civil["Year"].min(),
                         max=df_civil["Year"].max(),
                         step=1,
@@ -125,14 +211,14 @@ line_democracy = html.Div(
                 [
                     dcc.Slider(
                         id="my-slider-7",
-                        value=df_democracy["Year"].min(),
+                        value=df_democracy["Year"].max(),
                         min=df_democracy["Year"].min(),
                         max=df_democracy["Year"].max(),
                         marks=None,
                         updatemode="drag",
                         tooltip={"placement": "bottom", "always_visible": True},
                     ),
-                    dcc.Graph(id="graph-line-democracy"),
+                    dcc.Graph(id="graph-line-democracy", style={"height": "30vh"}),
                 ]
             )
         )
@@ -150,18 +236,28 @@ layout = html.Div(
                 [
                     dbc.Row(
                         [
-                            dbc.Col(text_exp, width=2),
-                            dbc.Col(id_country, width=4),
-                            dbc.Col(map_elect, width=6),
+                            dbc.Col(text_exp_1, width=4),
+                            dbc.Col(line_democracy, width=8),
                         ],
                         align="center",
                     ),
                     html.Br(),
                     dbc.Row(
                         [
+                            dbc.Col(text_exp_2, width=2),
+                            dbc.Col(id_country_dem, width=4),
+                            dbc.Col(text_exp_3, width=2),
+                            dbc.Col(id_country_civ, width=4),
+                        ],
+                        align="center",
+                    ),
+                    html.Br(),
+                    dbc.Row(
+                        [
+                            dbc.Col(map_elect, width=6),
                             dbc.Col(map_civil_lib, width=6),
-                            dbc.Col(line_democracy, width=6),
-                        ]
+                        ],
+                        align="center",
                     ),
                 ]
             )
@@ -180,7 +276,7 @@ def map_electoral_democracy(value):
         color="electdem_vdem_owid",
         hover_name="Entity",
         hover_data=["electdem_vdem_owid"],
-        color_continuous_scale=px.colors.sequential.YlGnBu,
+        color_continuous_scale=palette,
         range_color=(0, 1),
     )
     fig.update_layout(
@@ -190,13 +286,16 @@ def map_electoral_democracy(value):
             showcountries=True,
             landcolor="LightGrey",
             projection_type="natural earth",
+            fitbounds="locations",
+            visible=False,
         ),
+        legend=dict(),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         geo_bgcolor="rgba(0,0,0,0)",
         dragmode="zoom",
-        transition=dict(duration=50),
-        clickmode="select",
+        transition=dict(duration=0),
+        clickmode="event+select",
     )
     fig.update_coloraxes(
         colorbar=dict(
@@ -207,27 +306,27 @@ def map_electoral_democracy(value):
 
 
 @callback(
-    Output("line-country", "figure"),
-    Input("graph-electoral", "hoverData"),
+    Output("line-country-dem", "figure"),
+    Input("graph-electoral", "clickData"),
 )
-def line_id_country(hoverData):
-    if hoverData is None:
+def line_id_country_dem(clickData):
+    if clickData is None:
         country = "Belgium"
     else:
-        country = hoverData["points"][0]["hovertext"]
+        country = clickData["points"][0]["hovertext"]
     dff = prepare_line(df_electoral, country)
     palette = px.colors.sequential.YlGnBu
     fig = px.line(
         dff,
         x="Year",
-        y=["electdem_vdem_owid"],  # 'electdem_vdem_high_owid', 'electdem_vdem_low_owid'
+        y="electdem_vdem_owid",  # 'electdem_vdem_high_owid', 'electdem_vdem_low_owid'
         color="Entity",
     )
     fig.update_layout(
+        title=f"Electoral democracy score for {country}",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
-        legend=dict(),
     )
     fig.update_traces(line_color=palette[-1])
     fig.update_xaxes(
@@ -241,25 +340,13 @@ def line_id_country(hoverData):
         # color='LightGrey',
         gridcolor="LightGrey",
     )
-
     return fig
-
-
-@callback(
-    Output("text-country", "children"),
-    Input("graph-electoral", "hoverData"),
-)
-def text_country(hoverData):
-    if hoverData is None:
-        country = "Belgium"
-    else:
-        country = hoverData["points"][0]["hovertext"]
-    return f"Electoral democracy score for {country}"
 
 
 @callback(Output("graph-civil", "figure"), [Input("my-slider-6", "value")])
 def map_civil_liberties(value):
     dff = prepare_map(df_civil, value)
+    # dff['civlib_eiu'] = np.rint(dff['civlib_eiu']).astype('str')
     palette = px.colors.sequential.YlGnBu
     fig = px.choropleth(
         dff,
@@ -267,7 +354,19 @@ def map_civil_liberties(value):
         color="civlib_eiu",
         hover_name="Entity",
         hover_data=["civlib_eiu"],
+        # category_orders= ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
         color_continuous_scale=px.colors.sequential.YlGnBu,
+        # color_discrete_map={
+        #     "1":palette[0],
+        #     "2": palette[1],
+        #     "3": palette[2],
+        #     "4": palette[3],
+        #     "5": palette[4],
+        #     "6": palette[5],
+        #     "7": palette[6],
+        #     "9": palette[7],
+        #     "10": palette[8],
+        # },
         range_color=(0, 10),
     )
     fig.update_layout(
@@ -277,13 +376,15 @@ def map_civil_liberties(value):
             showcountries=True,
             landcolor="LightGrey",
             projection_type="natural earth",
+            fitbounds="locations",
+            visible=False,
         ),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         geo_bgcolor="rgba(0,0,0,0)",
         dragmode="zoom",
-        transition=dict(duration=50),
-        clickmode="select",
+        transition=dict(duration=0),
+        clickmode="event+select",
     )
     fig.update_coloraxes(
         colorbar=dict(
@@ -297,21 +398,81 @@ def map_civil_liberties(value):
     return fig
 
 
+@callback(Output("line-country-civ", "figure"), [Input("graph-civil", "clickData")])
+def line_id_country_civ(clickData):
+    if clickData is None:
+        country = "Belgium"
+    else:
+        country = clickData["points"][0]["hovertext"]
+    dff = prepare_line(df_civil, country)
+    palette = px.colors.sequential.YlGnBu
+    fig = px.line(
+        dff,
+        x="Year",
+        y="civlib_eiu",
+        color="Entity",
+    )
+    fig.update_layout(
+        title=f"Civil liberties score for {country}",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        showlegend=False,
+        legend=dict(),
+    )
+    fig.update_traces(line_color=palette[-1])
+    fig.update_xaxes(
+        showgrid=True,
+        # color='LightGrey',
+        gridcolor="LightGrey",
+    )
+    fig.update_yaxes(
+        showgrid=True,
+        range=(0, 10),
+        # color='LightGrey',
+        gridcolor="LightGrey",
+    )
+    return fig
+
+
 @callback(Output("graph-line-democracy", "figure"), [Input("my-slider-7", "value")])
 def map_people_democracies(value):
+    palette = px.colors.sequential.Viridis
     dff = prepare_scatter(df_democracy, value)
     fig = px.area(
         dff,
         x="Year",
         y=[
-            "pop_missreg_bmr_owid",
-            "pop_nondem_womsuffr_bmr_owid",
-            "pop_dem_womsuffr_bmr_owid",
+            "no regime data",
+            "closed autocraties",
+            "electoral autocraties",
+            "electoral democraties",
+            "liberal democraties",
         ],
-        color=[
-            "pop_missreg_bmr_owid",
-            "pop_nondem_womsuffr_bmr_owid",
-            "pop_dem_womsuffr_bmr_owid",
-        ],
+        color_discrete_map={
+            "no regime data": "grey",
+            "closed autocraties": palette[0],
+            "electoral autocraties": palette[2],
+            "electoral democraties": palette[-2],
+            "liberal democraties": palette[-1],
+        },
+    )
+    fig.update_layout(
+        margin=dict(t=0, b=0, l=0, r=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        # dragmode="zoom",
+        transition=dict(duration=0),
+        # clickmode="select",
+        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, font_color="black"),
+    )
+    fig.update_xaxes(
+        showgrid=False,
+        # color='LightGrey',
+        gridcolor="LightGrey",
+    )
+    fig.update_yaxes(
+        showgrid=False,
+        # color='LightGrey',
+        gridcolor="LightGrey",
     )
     return fig
