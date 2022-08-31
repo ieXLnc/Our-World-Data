@@ -1,9 +1,9 @@
 from dash import Dash, dcc, html, Input, Output, register_page, callback
 import os
 import plotly.express as px
+import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 import pandas as pd
-import numpy as np
 
 static = "static/"
 df_electoral = pd.read_csv(os.path.join(static, "democracy.csv"))
@@ -218,7 +218,14 @@ line_democracy = html.Div(
                         updatemode="drag",
                         tooltip={"placement": "bottom", "always_visible": True},
                     ),
-                    dcc.Graph(id="graph-line-democracy", style={"height": "30vh"}),
+                    dcc.Graph(
+                        id="graph-line-democracy",
+                        style={"height": "30vh"},
+                        config={
+                            "displaylogo": False,
+                            "displayModeBar": False,
+                        },
+                    ),
                 ]
             )
         )
@@ -278,6 +285,17 @@ def map_electoral_democracy(value):
         hover_data=["electdem_vdem_owid"],
         color_continuous_scale=palette,
         range_color=(0, 1),
+        custom_data=[
+            "Entity",
+            "Year",
+            "electdem_vdem_owid",
+            "electdem_vdem_high_owid",
+            "electdem_vdem_low_owid",
+        ],
+    )
+    fig.update_traces(
+        hovertemplate="%{customdata[0]} in %{customdata[1]}: <br>Democracy score: %{customdata[2]} <br>"
+        "Upper bound: %{customdata[3]} <br>Lower bound: %{customdata[4]}"
     )
     fig.update_layout(
         margin=dict(t=0, b=0, l=0, r=0),
@@ -319,16 +337,38 @@ def line_id_country_dem(clickData):
     fig = px.line(
         dff,
         x="Year",
-        y="electdem_vdem_owid",  # 'electdem_vdem_high_owid', 'electdem_vdem_low_owid'
+        y="electdem_vdem_owid",  #'electdem_vdem_high_owid', 'electdem_vdem_low_owid'],
         color="Entity",
+        labels={"electdem_vdem_owid": "Democracy score"},
+    )
+    fig.update_traces(line_color=palette[-1], hovertemplate=None)
+    # upper bound
+    fig.add_trace(
+        go.Line(
+            x=dff["Year"],
+            y=dff["electdem_vdem_high_owid"],
+            opacity=0.6,
+            line=dict(color="Grey"),
+            name="Upper bound",
+        )
+    )
+    # lower bound
+    fig.add_trace(
+        go.Line(
+            x=dff["Year"],
+            y=dff["electdem_vdem_low_owid"],
+            opacity=0.6,
+            line=dict(color="Grey"),
+            name="Lower bound",
+        )
     )
     fig.update_layout(
         title=f"Electoral democracy score for {country}",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
+        hovermode="x",
     )
-    fig.update_traces(line_color=palette[-1])
     fig.update_xaxes(
         showgrid=True,
         # color='LightGrey',
@@ -346,7 +386,6 @@ def line_id_country_dem(clickData):
 @callback(Output("graph-civil", "figure"), [Input("my-slider-6", "value")])
 def map_civil_liberties(value):
     dff = prepare_map(df_civil, value)
-    # dff['civlib_eiu'] = np.rint(dff['civlib_eiu']).astype('str')
     palette = px.colors.sequential.YlGnBu
     fig = px.choropleth(
         dff,
@@ -354,20 +393,12 @@ def map_civil_liberties(value):
         color="civlib_eiu",
         hover_name="Entity",
         hover_data=["civlib_eiu"],
-        # category_orders= ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
         color_continuous_scale=px.colors.sequential.YlGnBu,
-        # color_discrete_map={
-        #     "1":palette[0],
-        #     "2": palette[1],
-        #     "3": palette[2],
-        #     "4": palette[3],
-        #     "5": palette[4],
-        #     "6": palette[5],
-        #     "7": palette[6],
-        #     "9": palette[7],
-        #     "10": palette[8],
-        # },
         range_color=(0, 10),
+        custom_data=["Entity", "Year", "civlib_eiu"],
+    )
+    fig.update_traces(
+        hovertemplate="%{customdata[0]} in %{customdata[1]}: <br>Civil liberties score: %{customdata[2]}"
     )
     fig.update_layout(
         margin=dict(t=0, b=0, l=0, r=0),
@@ -411,6 +442,11 @@ def line_id_country_civ(clickData):
         x="Year",
         y="civlib_eiu",
         color="Entity",
+        custom_data=["Year", "civlib_eiu"],
+        labels={"civlib_eiu": "Civil liberties score"},
+    )
+    fig.update_traces(
+        hovertemplate="%{customdata[0]}: <br>Civil liberties score: %{customdata[1]}"
     )
     fig.update_layout(
         title=f"Civil liberties score for {country}",
@@ -467,12 +503,10 @@ def map_people_democracies(value):
     )
     fig.update_xaxes(
         showgrid=False,
-        # color='LightGrey',
         gridcolor="LightGrey",
     )
     fig.update_yaxes(
         showgrid=False,
-        # color='LightGrey',
         gridcolor="LightGrey",
     )
     return fig

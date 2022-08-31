@@ -1,7 +1,9 @@
+import os
 from dash import Dash, dcc, html, Input, Output
 import dash
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
+import gunicorn
 
 static = "static/"
 load_figure_template("MINTY")
@@ -33,6 +35,7 @@ navbar = dbc.NavbarSimple(
 ###-------------------Build app-----------------------------
 
 app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.MINTY])
+server = app.server
 
 # define our HTML page
 app.layout = html.Div(
@@ -55,4 +58,4 @@ app.layout = html.Div(
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(host="0.0.0.0", port=8050, debug=True)

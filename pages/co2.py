@@ -160,15 +160,17 @@ layout = html.Div(
 @callback(Output("my-graph-2", "figure"), [Input("my-slider-1", "value")])
 def update_map(value):
     dff = prepare_map(df, value)
-    dff["Annual CO2 emissions"] = np.log10(dff["Annual CO2 emissions"])
     fig = px.choropleth(
         dff,
         locations="Code",
-        color="Annual CO2 emissions",
+        color="Annual CO2 emissions log",
         hover_name="Entity",
-        hover_data=["Annual CO2 emissions"],
+        custom_data=["Entity", "rounded_emissions", "Year"],
         color_continuous_scale=px.colors.sequential.YlGnBu,
-        range_color=(np.log10(1e7), np.log10(20e9)),
+        range_color=(np.log10(10e7), np.log10(10e9)),
+    )
+    fig.update_traces(
+        hovertemplate="CO2 for %{customdata[0]} in %{customdata[2]}: %{customdata[1]:.2f} millions",
     )
     fig.update_layout(
         margin=dict(t=0, b=0, l=0, r=0),
@@ -177,7 +179,6 @@ def update_map(value):
             showcountries=True,
             showlakes=True,
             landcolor="LightGrey",
-            # projection_type='equirectangular'
             projection_type="natural earth",
             fitbounds="locations",
             visible=False,
@@ -185,7 +186,7 @@ def update_map(value):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         geo_bgcolor="rgba(0,0,0,0)",
-        autosize=True,  # width=1300, height=500,
+        autosize=True,
         clickmode="event+select",
     )
     fig.update_coloraxes(
@@ -196,32 +197,30 @@ def update_map(value):
             thickness=15,
             title="CO2",
             tickvals=[
-                np.log10(10e7),
-                np.log10(20e7),
+                #     np.log10(10e7),
+                #     np.log10(20e7),
                 np.log10(50e7),
                 np.log10(100e7),
                 np.log10(200e7),
                 np.log10(500e7),
-                np.log10(1e9),
-                np.log10(5e9),
+                #     #np.log10(1e9),
+                #     #np.log10(5e9),
                 np.log10(10e9),
-                np.log10(20e9),
             ],
             ticktext=[
-                "10M",
-                "20M",
+                #     "10M",
+                #     "20M",
                 "50M",
                 "100M",
                 "200M",
                 "500M",
-                "1B",
-                "5B",
+                #     #"1B",
+                #     #"5B",
                 "10B",
-                "20B",
             ],
+            # tickwidth=10
         )
     )
-
     return fig
 
 

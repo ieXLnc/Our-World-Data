@@ -16,6 +16,7 @@ def prepare_map(df, year):
     df_yr = df_yr.fillna("No data")
     return df_yr
 
+
 def gender_infos(df, selectedData, var):
 
     mask = selectedData["points"][0]["hovertext"]
@@ -42,7 +43,7 @@ text = html.Div(
                             html.P(
                                 """Based on the classification and assessment by Skaaning et al. (2015).""",
                             ),
-                            html.Div(id='voting-right')
+                            html.Div(id="voting-right"),
                         ],
                         style={"height": "55vh"},  # "textAlign": "center",
                     ),
@@ -102,7 +103,7 @@ text_2 = html.Div(
                                 """Based on the classification by Lührmann et al. (2018) and the assessment by V-Dem’s experts. It captures that women
 safely bring cases before courts, are able to seek redress if public authorities violate their rights, and trials are fair."""
                             ),
-                            html.Div(id='access-justice')
+                            html.Div(id="access-justice"),
                         ],
                         style={"height": "55vh"},  # "textAlign": "center"
                     ),
@@ -195,9 +196,11 @@ def update_map(value):
         color_discrete_map={
             "No": palette_red[-4],
             "Yes": palette_blue[-4],
-            "No Data": "grey",
         },
-        # animation_frame="Year", animation_group="Code"
+        custom_data=["Entity", "female_suffrage_lied"],
+    )
+    fig.update_traces(
+        hovertemplate="%{customdata[0]}"  # <br>Voting right for women: %{customdata[1]}
     )
     fig.update_layout(
         margin=dict(t=0, b=0, l=0, r=0),
@@ -225,7 +228,8 @@ def update_map(value):
 
     return fig
 
-@callback(Output('voting-right', 'children'), Input('my-graph-3', 'selectedData'))
+
+@callback(Output("voting-right", "children"), Input("my-graph-3", "selectedData"))
 def voting_rights(selectedData):
 
     if selectedData is None:
@@ -253,14 +257,16 @@ def update_map(value):
         color_discrete_map={
             "No": palette_red[-4],
             "Yes": palette_blue[-4],
-            "No Data": "grey",
         },
+        custom_data=["Entity", "accessjust_w_row_owid"],
+    )
+    fig.update_traces(
+        hovertemplate="%{customdata[0]}"  # <br>Voting right for women: %{customdata[1]}
     )
     fig.update_layout(
         margin=dict(t=0, b=0, l=0, r=0),
         legend=dict(
             title="Access to justice for women",
-            # itemclick="toggleothers",
             traceorder="normal",
         ),
         geo=dict(
@@ -278,11 +284,10 @@ def update_map(value):
         transition=dict(duration=50),
         clickmode="event+select",
     )
-
     return fig
 
 
-@callback(Output('access-justice', 'children'), Input('my-graph-4', 'selectedData'))
+@callback(Output("access-justice", "children"), Input("my-graph-4", "selectedData"))
 def access_justice(selectedData):
 
     if selectedData is None:

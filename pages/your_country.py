@@ -34,7 +34,9 @@ def map_selection():
         hover_name="Entity",
         hover_data=["Entity"],
         color_continuous_scale=palette,
+        custom_data=["Entity"],
     )
+    fig.update_traces(hovertemplate="%{customdata[0]}")
     fig.update_geos(fitbounds="locations", visible=False)
     fig.update_layout(
         title={
@@ -264,7 +266,7 @@ layout = html.Div(
     Output("gender-equality-info", "children"),
     Input("map-selection-country", "clickData"),
 )
-def update_graph(clickData):
+def gender_text(clickData):
 
     country, year_vote = gender_infos(df_vote, clickData, "female_suffrage_lied")
     country, year_right = gender_infos(df_right, clickData, "accessjust_w_row_owid")
@@ -293,8 +295,8 @@ def update_graph(clickData):
     Output("co2-graph", "figure"),
     [Input("my-slider-8", "value"), Input("map-selection-country", "clickData")],
 )
-def update_graph(value, selectedData):
-    country, dff = prepare_scatter(df_co2, value, selectedData)
+def update_graph(value, clickData):
+    country, dff = prepare_scatter(df_co2, value, clickData)
     fig = px.line(
         dff,
         x="Year",
@@ -343,6 +345,11 @@ def update_graph(clickData):
         y="electdem_vdem_owid",
         color="Entity",
         color_discrete_sequence=px.colors.sequential.Aggrnyl,
+        custom_data=["Entity", "Year", "electdem_vdem_owid"],
+        labels={"electdem_vdem_owid": "Democracy score"},
+    )
+    fig.update_traces(
+        hovertemplate="%{customdata[1]}<br>" "Democracy score: %{customdata[2]}"
     )
     fig.update_layout(
         title=f"Electoral democracy score for {country}",
@@ -378,6 +385,11 @@ def update_graph(clickData):
         y="civlib_eiu",
         color="Entity",
         color_discrete_sequence=px.colors.sequential.Aggrnyl,
+        custom_data=["Entity", "Year", "civlib_eiu"],
+        labels={"civlib_eiu": "Civil liberties score"},
+    )
+    fig.update_traces(
+        hovertemplate="%{customdata[1]}<br>" "Civil liberties score: %{customdata[2]}"
     )
     fig.update_layout(
         title=f"Civil liberties score for {country}",
