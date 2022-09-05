@@ -18,7 +18,7 @@ For now there are 5 pages:
 
 I will also try to add new pages as I go along!
 
-You can find the web application [here](https://ourworldvisualisation.herokuapp.com/)
+You can find the web application [here](https://ourworldvisualisation.herokuapp.com/)<br>
 And the docker container at: iexlnc/dashboard_deployement
 
 New version & detailled description coming soon!
