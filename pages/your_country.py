@@ -110,10 +110,13 @@ about_your_country = html.Div(
             dbc.CardBody(
                 [
                     html.H3("What about your country?"),
+                    html.P("Find out the statistics on a specific country!"),
                     html.P("Select a country on the map to know more about it"),
                 ],
                 style={"height": "45vh"},
-            )
+            ),
+            color="#D6CDA4",
+            style={"border-color": "rgba(0,0,0,0)"},
         )
     ]
 )
@@ -136,7 +139,8 @@ map_select = html.Div(
                     )
                 ],
                 style={"height": "45vh"},
-            )
+            ),
+            style={"border-color": "rgba(0,0,0,0)"},
         )
     ]
 )
@@ -150,7 +154,9 @@ gender_tab = html.Div(
                     html.Div(id="gender-equality-info", style={"font-size": "25px"}),
                 ],
                 style={"height": "45vh"},
-            )
+            ),
+            style={"border-color": "rgba(0,0,0,0)"},
+            color="#EEF2E6",
         )
     ]
 )
@@ -180,7 +186,9 @@ co2_tab = html.Div(
                     ),
                 ],
                 style={"height": "45vh"},
-            )
+            ),
+            style={"border-color": "rgba(0,0,0,0)"},
+            color="#EEF2E6",
         )
     ]
 )
@@ -200,7 +208,9 @@ dem_tab = html.Div(
                     )
                 ],
                 style={"height": "45vh"},
-            )
+            ),
+            style={"border-color": "rgba(0,0,0,0)"},
+            color="#EEF2E6",
         )
     ]
 )
@@ -220,7 +230,9 @@ civil_tab = html.Div(
                     )
                 ],
                 style={"height": "45vh"},
-            )
+            ),
+            style={"border-color": "rgba(0,0,0,0)"},
+            color="#EEF2E6",
         )
     ]
 )
@@ -230,7 +242,7 @@ register_page(
     __name__,
     use_pages=True,
     path="/your-country",
-    external_stylesheets=[dbc.themes.MINTY],
+    external_stylesheets=[dbc.themes.LUX],
 )
 
 layout = html.Div(
@@ -240,22 +252,33 @@ layout = html.Div(
                 [
                     dbc.Row(
                         [
-                            dbc.Col(about_your_country, width=3),
-                            dbc.Col(map_select, width=6),
-                            dbc.Col(gender_tab, width=3),
+                            dbc.Col(about_your_country, width=4),
+                            dbc.Col(map_select, width=8),
                         ],
                         align="center",
+                        justify="center",
                     ),
                     html.Br(),
                     dbc.Row(
                         [
-                            dbc.Col(co2_tab, width=6),
-                            dbc.Col(dem_tab, width=3),
-                            dbc.Col(civil_tab, width=3),
-                        ]
+                            dbc.Col(gender_tab, width=4),
+                            dbc.Col(dem_tab, width=4),
+                            dbc.Col(civil_tab, width=4),
+                        ],
+                        align="center",
+                        justify="center",
+                    ),
+                    html.Br(),
+                    dbc.Row(
+                        [
+                            dbc.Col(co2_tab, width=12),
+                        ],
+                        align="center",
+                        justify="center",
                     ),
                 ]
-            )
+            ),
+            color="#EEF2E6",
         )
     ]
 )
@@ -274,7 +297,7 @@ def gender_text(clickData):
     if year_vote != -1 and year_right != -1:
         s = (
             f"In {country}, women obtained the right to vote in {year_vote}."
-            + f"They have secure access to justice since {year_right}"
+            + f"They have secure access to justice since {year_right}."
         )
 
     elif year_vote != -1 and year_right == -1:
@@ -307,7 +330,8 @@ def update_graph(value, clickData):
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        margin=dict(t=25, b=0, l=0, r=0),
+        margin=dict(t=25, b=0, l=25, r=25),
+        showlegend=False,
         title={
             "text": f"CO2 Emissions for {country}",
             "y": 0.99,

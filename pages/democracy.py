@@ -47,7 +47,8 @@ text_exp_1 = html.Div(
                     ),
                 ]
             ),
-            style={"height": "40vh"},
+            color="#D6CDA4",
+            style={"height": "40vh", "border-color": "rgba(0,0,0,0)"},
         )
     ]
 )
@@ -66,13 +67,14 @@ text_exp_2 = html.Div(
                             ranges from 0 to 1 (most democratic).""",
                         style={
                             "TextAlign": "center",
-                            "height": "35vh",
+                            "height": "40vh",
                             "font-size": "13px",
                         },
                     ),
                 ]
             ),
-            style={"height": "40vh"},
+            color="#D6CDA4",
+            style={"height": "45vh", "border-color": "rgba(0,0,0,0)"},
         )
     ]
 )
@@ -90,13 +92,14 @@ text_exp_3 = html.Div(
                     liberties).""",
                         style={
                             "TextAlign": "center",
-                            "height": "35vh",
+                            "height": "40vh",
                             "font-size": "13px",
                         },
                     ),
                 ]
             ),
-            style={"height": "40vh"},
+            color="#D6CDA4",
+            style={"height": "45vh", "border-color": "rgba(0,0,0,0)"},
         )
     ]
 )
@@ -110,7 +113,7 @@ id_country_dem = html.Div(
                     #
                     dcc.Graph(
                         id="line-country-dem",
-                        style={"height": "35vh"},
+                        style={"height": "40vh"},
                         config={
                             "displaylogo": False,
                             "displayModeBar": False,
@@ -118,7 +121,8 @@ id_country_dem = html.Div(
                     ),
                 ]
             ),
-            style={"height": "40vh"},
+            color="#EEF2E6",
+            style={"height": "45vh", "border-color": "rgba(0,0,0,0)"},
         )
     ]
 )
@@ -132,7 +136,7 @@ id_country_civ = html.Div(
                     #
                     dcc.Graph(
                         id="line-country-civ",
-                        style={"height": "35vh"},
+                        style={"height": "40vh"},
                         config={
                             "displaylogo": False,
                             "displayModeBar": False,
@@ -140,7 +144,8 @@ id_country_civ = html.Div(
                     ),
                 ]
             ),
-            style={"height": "40vh"},
+            color="#EEF2E6",
+            style={"height": "45vh", "border-color": "rgba(0,0,0,0)"},
         )
     ]
 )
@@ -220,21 +225,23 @@ line_democracy = html.Div(
                     ),
                     dcc.Graph(
                         id="graph-line-democracy",
-                        style={"height": "30vh"},
+                        style={"height": "35vh"},
                         config={
                             "displaylogo": False,
                             "displayModeBar": False,
                         },
                     ),
                 ]
-            )
+            ),
+            color="#EEF2E6",
+            style={"border-color": "rgba(0,0,0,0)"},
         )
     ]
 )
 
 
 # -------------------Build app-----------------------------
-register_page(__name__, path="/democracy", external_stylesheets=[dbc.themes.MINTY])
+register_page(__name__, path="/democracy", external_stylesheets=[dbc.themes.LUX])
 
 layout = html.Div(
     [
@@ -267,7 +274,8 @@ layout = html.Div(
                         align="center",
                     ),
                 ]
-            )
+            ),
+            color="#EEF2E6",
         )
     ]
 )

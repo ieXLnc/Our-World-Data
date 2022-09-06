@@ -6,7 +6,7 @@ from dash_bootstrap_templates import load_figure_template
 import gunicorn
 
 static = "static/"
-load_figure_template("MINTY")
+load_figure_template("LUX")
 
 # -------------------Build Layout--------------------------
 # navbar
@@ -27,14 +27,14 @@ navbar = dbc.NavbarSimple(
     ],
     brand="Our World Data",  # Set the text on the left side of the Navbar
     sticky="top",
-    color="primary",
+    color="#1C6758",
     dark=True,
 )
 
 
 ###-------------------Build app-----------------------------
 
-app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.MINTY])
+app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.LUX])
 server = app.server
 
 # define our HTML page
@@ -50,7 +50,8 @@ app.layout = html.Div(
                         align="center",
                     ),
                 ]
-            )
+            ),
+            color="#1C6758",
         ),
         dash.page_container,
     ]
@@ -58,4 +59,5 @@ app.layout = html.Div(
 
 
 if __name__ == "__main__":
-    app.run_server(host="0.0.0.0", port=8050, debug=True)
+    app.run_server(debug=True)
+    # app.run_server(host="0.0.0.0", port=8050, debug=True)

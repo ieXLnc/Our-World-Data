@@ -64,23 +64,17 @@ text_slider = html.Div(
                             html.P(
                                 """Carbon dioxide (CO₂) emissions from fossil fuels and industry. Land use change is not included."""
                             ),
+                            html.P(
+                                "Click on a country to see its CO2 emissions over time."
+                            ),
                         ],
                         style={"height": "45vh"},  # "textAlign": "center",
                     ),
-                    html.Div(
-                        [
-                            dcc.Slider(
-                                id="my-slider-1",
-                                value=df["Year"].max(),
-                                min=df["Year"].min(),
-                                max=df["Year"].max(),
-                                marks=None,
-                                tooltip={"placement": "bottom", "always_visible": True},
-                            ),
-                        ]
-                    ),
+                    html.Div([]),
                 ]
-            )
+            ),
+            color="#EEF2E6",
+            style={"border": "rgba(0,0,0,0)"},
         )
     ]
 )
@@ -96,7 +90,9 @@ scatter_graph = html.Div(
                         config={"displaylogo": False, "displayModeBar": False},
                     )
                 ]
-            )
+            ),
+            color="#EEF2E6",
+            style={"border": "rgba(0,0,0,0"},
         )
     ]
 )
@@ -106,16 +102,27 @@ map_graph = html.Div(
         dbc.Card(
             dbc.CardBody(
                 [
+                    dcc.Slider(
+                        id="my-slider-1",
+                        value=df["Year"].max(),
+                        min=df["Year"].min(),
+                        max=df["Year"].max(),
+                        marks=None,
+                        tooltip={"placement": "bottom", "always_visible": True},
+                        step=1,
+                    ),
                     dcc.Graph(
                         id="my-graph-2",
                         style={"width": "100%", "height": "100%", "Align": "center"},
-                        config={
-                            "displaylogo": False,
-                            "displayModeBar": False,
-                        },
-                    )
+                        # config={
+                        #     "displaylogo": False,
+                        #     "displayModeBar": False,
+                        # },
+                    ),
                 ]
-            )
+            ),
+            color="white",
+            style={"border-color": "rgba(0,0,0, 0)"},
         )
     ]
 )
@@ -124,7 +131,7 @@ map_graph = html.Div(
 # -------------------Build app-----------------------------
 
 # app = Dash(__name__)
-register_page(__name__, path="/co2", external_stylesheets=[dbc.themes.MINTY])
+register_page(__name__, path="/co2", external_stylesheets=[dbc.themes.LUX])
 
 
 layout = html.Div(
@@ -150,7 +157,9 @@ layout = html.Div(
                         align="center",
                     ),
                 ]
-            )
+                # color for background card
+            ),
+            color="#EEF2E6",
         )
     ]
 )
@@ -179,10 +188,12 @@ def update_map(value):
             showcountries=True,
             showlakes=True,
             landcolor="LightGrey",
-            projection_type="natural earth",
+            projection_type="equirectangular",
             fitbounds="locations",
             visible=False,
         ),
+        width=1500,
+        height=600,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         geo_bgcolor="rgba(0,0,0,0)",

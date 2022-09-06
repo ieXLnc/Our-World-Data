@@ -49,7 +49,8 @@ text = html.Div(
                     ),
                 ]
             ),
-            style={"height": "60vh"},
+            style={"height": "60vh", "border": "rgba(0,0,0,0)"},
+            color="#D6CDA4",
         )
     ]
 )
@@ -86,7 +87,9 @@ graph_vote = html.Div(
                     ),
                 ],
                 style={"height": "60vh"},
-            )
+            ),
+            color="white",
+            style={"border-color": "rgba(0,0,0,0)"},
         )
     ]
 )
@@ -109,7 +112,8 @@ safely bring cases before courts, are able to seek redress if public authorities
                     ),
                 ]
             ),
-            style={"height": "60vh"},
+            style={"height": "60vh", "border": "rgba(0,0,0,0)"},
+            color="#D6CDA4",
         )
     ]
 )
@@ -150,7 +154,9 @@ graph_right = html.Div(
                     ),
                 ],
                 style={"height": "60vh"},
-            )
+            ),
+            color="white",
+            style={"border-color": "rgba(0,0,0,0)"},
         )
     ]
 )
@@ -175,7 +181,8 @@ layout = html.Div(
                         align="center",
                     ),
                 ]
-            )
+            ),
+            color="#EEF2E6",
         )
     ]
 )
@@ -238,9 +245,29 @@ def voting_rights(selectedData):
     country, year = gender_infos(df_vote, selectedData, "female_suffrage_lied")
     if year != -1:
         s = f"In {country}, women obtained the right to vote in {year}."
+        color_women_right = "blue"
     else:
         s = f"In {country}, women do not have the right to vote. "
+        color_women_right = "red"
+
     return s
+
+
+# @callback(Output("voting-right", "children"), Input("my-graph-3", "selectedData"))
+# def voting_rights(selectedData):
+#     global color_women_right
+#
+#     if selectedData is None:
+#         return "No selected country"
+#
+#     country, year = gender_infos(df_vote, selectedData, "female_suffrage_lied")
+#     if year != -1:
+#         s = f"In {country}, women obtained the right to vote in {year}."
+#         color_women_right = 'blue'
+#     else:
+#         s = f"In {country}, women do not have the right to vote. "
+#         color_women_right = 'red'
+#     return s
 
 
 @callback(Output("my-graph-4", "figure"), [Input("my-slider-4", "value")])
