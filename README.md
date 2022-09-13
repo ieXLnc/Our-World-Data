@@ -22,3 +22,7 @@ You can find the web application [here](https://ourworldvisualisation.herokuapp.
 And the docker container at: iexlnc/dashboard_deployement
 
 New version & detailled description coming soon!
+
+Next steps are: 
+- Creating a Database with all datasets to get my data from SQL instead of static pandas files
+- Improve backend visu and frontend comprehension based on feedbacks!
