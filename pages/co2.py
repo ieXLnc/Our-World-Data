@@ -9,21 +9,36 @@ from dash import (
     callback,
     clientside_callback,
 )
+
 import plotly.express as px
 import pandas as pd
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 import numpy as np
+from constant import STATIC, C_1, C_2, C_3, C_4
+import sqlite3
 
-static = "static/"
+# connect to database
+con = sqlite3.connect("static/World_data.db")
+cur = con.cursor()
+
 load_figure_template("MINTY")
-df = pd.read_csv(os.path.join(static, "annual-co2-emissions-per-country.csv"))
+
+
+df = pd.read_sql_query(
+    "SELECT Code, Entity, Year, Annual_CO2_emissions, rounded_emissions, map_emissions "
+    "from World_data WHERE Year >= 1800",
+    con,
+)
+
 
 # df functions
 def prepare_map(df, year):
     df_yr = df.loc[df["Year"] == year].copy()
     df_yr = df_yr.drop(df_yr.loc[df_yr["Entity"] == "Antarctica"].index)
-    df_yr = df_yr.fillna("No data")
+    # ARE --> UAE --> still not showing the country
+    df_yr["map_emissions"] = df_yr["map_emissions"].fillna("Missing Data")
+    df_yr["rounded_emissions"] = df_yr["rounded_emissions"].fillna(0)
     return df_yr
 
 
@@ -46,7 +61,7 @@ def prepare_scatter(df, year, selectedData):
         df_p = df[df["Entity"] == mask]
 
     df_p_yr = df_p.loc[df["Year"] <= year]
-    df_p_yr = df_p_yr.fillna("No data")
+    df_p_yr = df_p_yr.fillna(0)
 
     return df_p_yr
 
@@ -73,7 +88,7 @@ text_slider = html.Div(
                     html.Div([]),
                 ]
             ),
-            color="#EEF2E6",
+            color=C_4,
             style={"border": "rgba(0,0,0,0)"},
         )
     ]
@@ -91,8 +106,8 @@ scatter_graph = html.Div(
                     )
                 ]
             ),
-            color="#EEF2E6",
-            style={"border": "rgba(0,0,0,0"},
+            color=C_4,
+            style={"border-color": "rgba(0,0,0,0"},
         )
     ]
 )
@@ -159,7 +174,7 @@ layout = html.Div(
                 ]
                 # color for background card
             ),
-            color="#EEF2E6",
+            color=C_4,
         )
     ]
 )
@@ -169,15 +184,46 @@ layout = html.Div(
 @callback(Output("my-graph-2", "figure"), [Input("my-slider-1", "value")])
 def update_map(value):
     dff = prepare_map(df, value)
+    palette_p = px.colors.sequential.YlGnBu
+    palette_n = px.colors.sequential.Reds
+    # colorArray = px.colors.sequential.YlGnBu
+    # colorArray.insert(0, 'rgb(211, 211, 211)')
     fig = px.choropleth(
         dff,
         locations="Code",
-        color="Annual CO2 emissions log",
+        color="map_emissions",
         hover_name="Entity",
         custom_data=["Entity", "rounded_emissions", "Year"],
-        color_continuous_scale=px.colors.sequential.YlGnBu,
-        range_color=(np.log10(10e7), np.log10(10e9)),
+        category_orders={
+            "map_emissions": [
+                "Missing Data",
+                "0 - 20M",
+                "20M - 50M",
+                "50M - 100M",
+                "100M - 200M",
+                "200M - 500M",
+                "500M - 1B",
+                "1B - 2B",
+                "2B - 5B",
+                "5B - 10B",
+                "> 10B",
+            ]
+        },
+        color_discrete_map={
+            "Missing Data": "LightGrey",
+            "0 - 20M": palette_p[1],
+            "20M - 50M": palette_p[2],
+            "50M - 100M": palette_n[2],
+            "100M - 200M": palette_n[3],
+            "200M - 500M": palette_n[4],
+            "500M - 1B": palette_n[5],
+            "1B - 2B": palette_n[6],
+            "2B - 5B": palette_n[7],
+            "5B - 10B": palette_n[8],
+            "> 10B": palette_n[8],
+        },
     )
+
     fig.update_traces(
         hovertemplate="CO2 for %{customdata[0]} in %{customdata[2]}: %{customdata[1]:.2f} millions",
     )
@@ -187,10 +233,9 @@ def update_map(value):
             showframe=False,
             showcountries=True,
             showlakes=True,
-            landcolor="LightGrey",
+            landcolor="White",
             projection_type="equirectangular",
-            fitbounds="locations",
-            visible=False,
+            lataxis_range=(-60, 80),
         ),
         width=1500,
         height=600,
@@ -199,39 +244,17 @@ def update_map(value):
         geo_bgcolor="rgba(0,0,0,0)",
         autosize=True,
         clickmode="event+select",
-    )
-    fig.update_coloraxes(
-        colorbar=dict(
+        legend=dict(
+            # try to create the bar
             y=-0.15,
+            x=0.1,
             orientation="h",
-            len=0.7,
-            thickness=15,
-            title="CO2",
-            tickvals=[
-                #     np.log10(10e7),
-                #     np.log10(20e7),
-                np.log10(50e7),
-                np.log10(100e7),
-                np.log10(200e7),
-                np.log10(500e7),
-                #     #np.log10(1e9),
-                #     #np.log10(5e9),
-                np.log10(10e9),
-            ],
-            ticktext=[
-                #     "10M",
-                #     "20M",
-                "50M",
-                "100M",
-                "200M",
-                "500M",
-                #     #"1B",
-                #     #"5B",
-                "10B",
-            ],
-            # tickwidth=10
-        )
+            valign="top",
+            itemclick="toggleothers",
+            title="Annual CO2 Emissions",
+        ),
     )
+
     return fig
 
 
@@ -244,7 +267,7 @@ def update_graph(value, selectedData):
     fig = px.line(
         dff_2,
         x="Year",
-        y="Annual CO2 emissions",
+        y="Annual_CO2_emissions",
         color="Entity",
         color_discrete_sequence=px.colors.sequential.Aggrnyl,
     ).update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")

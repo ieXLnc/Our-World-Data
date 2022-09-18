@@ -4,9 +4,8 @@ import plotly.graph_objs as go
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 import pickle as pkl
+from constant import STATIC, C_1, C_2, C_3, C_4
 
-
-static = "static/"
 load_figure_template("MINTY")
 
 
@@ -14,7 +13,7 @@ load_figure_template("MINTY")
 
 
 def plot_globe():
-    cache = os.path.join(static + "fig_globe.pkl")
+    cache = os.path.join(STATIC + "fig_globe.pkl")
     with open(cache, "rb") as handle:
         fig = pkl.load(handle)
 
@@ -113,7 +112,7 @@ layout = html.Div(
         dbc.Card(
             [
                 dbc.CardImg(
-                    src=static + "map4_2.jpg",
+                    src=STATIC + "map4_2.jpg",
                     top=True,
                     style={
                         "height": "90vh",

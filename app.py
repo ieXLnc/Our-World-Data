@@ -4,9 +4,10 @@ import dash
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 import gunicorn
+from constant import C_1, C_2, C_3, C_4
 
-static = "static/"
 load_figure_template("LUX")
+
 
 # -------------------Build Layout--------------------------
 # navbar
@@ -27,14 +28,19 @@ navbar = dbc.NavbarSimple(
     ],
     brand="Our World Data",  # Set the text on the left side of the Navbar
     sticky="top",
-    color="#1C6758",
+    color=C_1,
     dark=True,
 )
 
 
 ###-------------------Build app-----------------------------
 
-app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.LUX])
+app = Dash(__name__,
+           use_pages=True, external_stylesheets=[dbc.themes.LUX],
+           meta_tags=[
+               {"name": "viewport", "content": "width=device-width, initial-scale=1"}
+           ],
+           )
 server = app.server
 
 # define our HTML page
@@ -51,7 +57,7 @@ app.layout = html.Div(
                     ),
                 ]
             ),
-            color="#1C6758",
+            color=C_1,
         ),
         dash.page_container,
     ]

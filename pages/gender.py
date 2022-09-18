@@ -1,19 +1,36 @@
 from dash import Dash, dcc, html, Input, Output, register_page, callback
 import os
 import dash
+import numpy as np
+import sqlite3
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import pandas as pd
+from constant import STATIC, DB, C_1, C_2, C_3, C_4
 
-static = "static/"
-df_vote = pd.read_csv(os.path.join(static, "gender_equality_vote.csv"))
-df_right = pd.read_csv(os.path.join(static, "gender_equality_right.csv"))
+# connect to database
+con = sqlite3.connect(os.path.join(STATIC, DB))
+cur = con.cursor()
+
+df_vote = pd.read_sql_query(
+    "SELECT Code, Entity, Year, female_suffrage_lied "
+    "from World_data "
+    "WHERE Year >= 1800",
+    con,
+)
+
+df_right = pd.read_sql_query(
+    "SELECT Code, Entity, Year, accessjust_w_row_owid "
+    "from World_data "
+    "WHERE Year >= 1800",
+    con,
+)
 
 
 def prepare_map(df, year):
     df_yr = df.loc[df["Year"] == year]
     df_yr = df_yr.drop(df_yr.loc[df_yr["Entity"] == "Antarctica"].index)
-    df_yr = df_yr.fillna("No data")
+    df_yr = df_yr.fillna("Missing Data")
     return df_yr
 
 
@@ -50,7 +67,7 @@ text = html.Div(
                 ]
             ),
             style={"height": "60vh", "border": "rgba(0,0,0,0)"},
-            color="#D6CDA4",
+            color=C_3,
         )
     ]
 )
@@ -70,6 +87,7 @@ graph_vote = html.Div(
                                 marks=None,
                                 updatemode="drag",
                                 tooltip={"placement": "bottom", "always_visible": True},
+                                step=1,
                             ),
                         ]
                     ),
@@ -113,7 +131,7 @@ safely bring cases before courts, are able to seek redress if public authorities
                 ]
             ),
             style={"height": "60vh", "border": "rgba(0,0,0,0)"},
-            color="#D6CDA4",
+            color=C_3,
         )
     ]
 )
@@ -133,6 +151,7 @@ graph_right = html.Div(
                                 marks=None,
                                 updatemode="drag",
                                 tooltip={"placement": "bottom", "always_visible": True},
+                                step=1,
                             ),
                         ]
                     ),
@@ -182,7 +201,7 @@ layout = html.Div(
                     ),
                 ]
             ),
-            color="#EEF2E6",
+            color=C_4,
         )
     ]
 )
@@ -203,6 +222,7 @@ def update_map(value):
         color_discrete_map={
             "No": palette_red[-4],
             "Yes": palette_blue[-4],
+            "Missing Data": "LightGrey",
         },
         custom_data=["Entity", "female_suffrage_lied"],
     )
@@ -213,16 +233,14 @@ def update_map(value):
         margin=dict(t=0, b=0, l=0, r=0),
         legend=dict(
             title="Voting right for women",
-            # itemclick="toggleothers",
             traceorder="normal",
         ),
         geo=dict(
             showframe=False,
             showcountries=True,
-            landcolor="LightGrey",
+            landcolor="White",
             projection_type="natural earth",
-            fitbounds="locations",
-            visible=False,
+            lataxis_range=(-60, 80),
         ),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -243,31 +261,15 @@ def voting_rights(selectedData):
         return "No selected country"
 
     country, year = gender_infos(df_vote, selectedData, "female_suffrage_lied")
+    # if still no right to vote year == -1
     if year != -1:
-        s = f"In {country}, women obtained the right to vote in {year}."
-        color_women_right = "blue"
+        if np.isnan(year):
+            s = "There are no data for that country"
+        else:
+            s = f"In {country}, women obtained the right to vote in {year}."
     else:
         s = f"In {country}, women do not have the right to vote. "
-        color_women_right = "red"
-
     return s
-
-
-# @callback(Output("voting-right", "children"), Input("my-graph-3", "selectedData"))
-# def voting_rights(selectedData):
-#     global color_women_right
-#
-#     if selectedData is None:
-#         return "No selected country"
-#
-#     country, year = gender_infos(df_vote, selectedData, "female_suffrage_lied")
-#     if year != -1:
-#         s = f"In {country}, women obtained the right to vote in {year}."
-#         color_women_right = 'blue'
-#     else:
-#         s = f"In {country}, women do not have the right to vote. "
-#         color_women_right = 'red'
-#     return s
 
 
 @callback(Output("my-graph-4", "figure"), [Input("my-slider-4", "value")])
@@ -284,6 +286,7 @@ def update_map(value):
         color_discrete_map={
             "No": palette_red[-4],
             "Yes": palette_blue[-4],
+            "Missing Data": "LightGrey",
         },
         custom_data=["Entity", "accessjust_w_row_owid"],
     )
@@ -297,11 +300,10 @@ def update_map(value):
             traceorder="normal",
         ),
         geo=dict(
-            fitbounds="locations",
-            visible=False,
+            lataxis_range=(-60, 80),
             showframe=False,
             showcountries=True,
-            landcolor="LightGrey",
+            landcolor="White",
             projection_type="natural earth",
         ),
         paper_bgcolor="rgba(0,0,0,0)",
@@ -323,7 +325,10 @@ def access_justice(selectedData):
     country, year = gender_infos(df_right, selectedData, "accessjust_w_row_owid")
 
     if year != -1:
-        s = f"In {country}, women have secure access to justice since {year}."
+        if np.isnan(year):
+            s = "There are no data for that country"
+        else:
+            s = f"In {country}, women have secure access to justice since {year}."
     else:
         s = f"In {country}, women do not have secure access to justice."
     return s

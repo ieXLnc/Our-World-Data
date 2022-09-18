@@ -1,20 +1,46 @@
 from dash import Dash, dcc, html, Input, Output, register_page, callback
 import os
+import sqlite3
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import pandas as pd
-import numpy as np
+from constant import STATIC, DB, C_1, C_2, C_3, C_4
 
-static = "static/"
+# connect to database
+con = sqlite3.connect(os.path.join(STATIC, DB))
+cur = con.cursor()
 
-df_co2 = pd.read_csv(os.path.join(static, "annual-co2-emissions-per-country.csv"))
-df_vote = pd.read_csv(os.path.join(static, "gender_equality_vote.csv"))
-df_right = pd.read_csv(os.path.join(static, "gender_equality_right.csv"))
-df_democracy = pd.read_csv(os.path.join(static, "democracy.csv"))
-df_civil = pd.read_csv(os.path.join(static, "civil-liberties-eiu.csv"))
+df_co2 = pd.read_sql_query(
+    "SELECT Code, Entity, Year, Annual_CO2_emissions "
+    "from World_data WHERE Year >= 1800",
+    con,
+)
 
+df_vote = pd.read_sql_query(
+    "SELECT Code, Entity, Year, female_suffrage_lied "
+    "from World_data "
+    "WHERE Year >= 1800",
+    con,
+)
 
-df_empty_loc = pd.read_csv(os.path.join(static, "annual-co2-emissions-per-country.csv"))
+df_right = pd.read_sql_query(
+    "SELECT Code, Entity, Year, accessjust_w_row_owid "
+    "from World_data "
+    "WHERE Year >= 1800",
+    con,
+)
+
+df_electoral = pd.read_sql_query(
+    "SELECT Code, Entity, Year, electdem_vdem_owid, electdem_vdem_high_owid, electdem_vdem_low_owid "
+    "from World_data "
+    "WHERE Year >= 1800",
+    con,
+)
+
+df_civil = pd.read_sql_query(
+    "SELECT Code, Entity, Year, civlib_eiu " "from World_data " "WHERE Year >= 1800",
+    con,
+)
 
 
 def get_empty_map(df):
@@ -25,7 +51,7 @@ def get_empty_map(df):
 
 
 def map_selection():
-    dff = get_empty_map(df_empty_loc)
+    dff = get_empty_map(df_co2)
     palette = px.colors.sequential.YlGnBu
     fig = px.choropleth(
         dff,
@@ -93,14 +119,16 @@ def prepare_scatter(df, year, selectedData):
         df_p = df[df["Entity"] == mask]
 
     df_p_yr = df_p.loc[df["Year"] <= year]
-    df_p_yr = df_p_yr.fillna("No data")
+    # drop na for the graph
+    df_p_yr.dropna(axis=0, inplace=True)
 
     return mask, df_p_yr
 
 
 def prepare_line(df, country):
-    mask = df[df["Entity"] == country]
-    return mask
+    df = df[df["Entity"] == country]
+    # df = df.fillna(method='bfill')
+    return df
 
 
 # -------------------Build layout--------------------------
@@ -115,7 +143,7 @@ about_your_country = html.Div(
                 ],
                 style={"height": "45vh"},
             ),
-            color="#D6CDA4",
+            color=C_3,
             style={"border-color": "rgba(0,0,0,0)"},
         )
     ]
@@ -156,7 +184,7 @@ gender_tab = html.Div(
                 style={"height": "45vh"},
             ),
             style={"border-color": "rgba(0,0,0,0)"},
-            color="#EEF2E6",
+            color=C_4,
         )
     ]
 )
@@ -188,7 +216,7 @@ co2_tab = html.Div(
                 style={"height": "45vh"},
             ),
             style={"border-color": "rgba(0,0,0,0)"},
-            color="#EEF2E6",
+            color=C_4,
         )
     ]
 )
@@ -210,7 +238,7 @@ dem_tab = html.Div(
                 style={"height": "45vh"},
             ),
             style={"border-color": "rgba(0,0,0,0)"},
-            color="#EEF2E6",
+            color=C_4,
         )
     ]
 )
@@ -232,7 +260,7 @@ civil_tab = html.Div(
                 style={"height": "45vh"},
             ),
             style={"border-color": "rgba(0,0,0,0)"},
-            color="#EEF2E6",
+            color=C_4,
         )
     ]
 )
@@ -278,7 +306,7 @@ layout = html.Div(
                     ),
                 ]
             ),
-            color="#EEF2E6",
+            color=C_4,
         )
     ]
 )
@@ -323,7 +351,7 @@ def update_graph(value, clickData):
     fig = px.line(
         dff,
         x="Year",
-        y="Annual CO2 emissions",
+        y="Annual_CO2_emissions",
         color="Entity",
         color_discrete_sequence=px.colors.sequential.Aggrnyl,
     )
@@ -342,7 +370,7 @@ def update_graph(value, clickData):
     )
     fig.update_xaxes(
         showgrid=True,
-        # color='LightGrey',
+        range=[dff.Year.min(), dff.Year.max()],
         gridcolor="LightGrey",
     )
     fig.update_yaxes(
@@ -362,7 +390,8 @@ def update_graph(clickData):
         country = "Belgium"
     else:
         country = clickData["points"][0]["hovertext"]
-    dff_d = prepare_line(df_democracy, country)
+    dff_d = prepare_line(df_electoral, country)
+    dff_d = dff_d.dropna(axis=0)
     fig = px.line(
         dff_d,
         x="Year",
@@ -383,6 +412,7 @@ def update_graph(clickData):
     )
     fig.update_xaxes(
         showgrid=True,
+        range=[dff_d.Year.min(), dff_d.Year.max()],
         gridcolor="LightGrey",
     )
     fig.update_yaxes(
@@ -403,6 +433,8 @@ def update_graph(clickData):
     else:
         country = clickData["points"][0]["hovertext"]
     dff_c = prepare_line(df_civil, country)
+    dff_c = dff_c.loc[dff_c.Year >= 2006]
+    dff_c = dff_c.fillna(method="bfill")
     fig = px.line(
         dff_c,
         x="Year",
@@ -423,6 +455,7 @@ def update_graph(clickData):
     )
     fig.update_xaxes(
         showgrid=True,
+        range=[dff_c.Year.min(), dff_c.Year.max()],
         gridcolor="LightGrey",
     )
     fig.update_yaxes(
